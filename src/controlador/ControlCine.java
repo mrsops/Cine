@@ -401,7 +401,7 @@ public class ControlCine {
 		 }
 	
 	
-	public void generarTiquet(Sesion s) { //CAMBIAR ESTO PARA QUE LE PASE YO LAS BUTACAS QUE QUIERO
+	public void generarTiquet(Sesion s) {
 		int cantidad=0;
 		for (int i = 0; i < s.getMapaSesion().length; i++) {
 			for (int j = 0; j < s.getMapaSesion()[i].length; j++) {
@@ -419,9 +419,29 @@ public class ControlCine {
 		tiquet+="Sala: "+s.getSala().getNumSala()+"\n";
 		tiquet+="Fecha: "+sdf.format(date)+"\n";
 		tiquet+="Precio: "+s.getPrecio().toString()+" x "+cantidad+" = "+multiplicadorPrecios(s.getPrecio(), cantidad)+"\n";
-		tiquet+="-------------------------------";
+		tiquet+="-------------------------------\n\n";
 		System.out.println(tiquet);
 		
+	}
+
+
+	public void generarTiquet(Sesion s, ArrayList<Butaca> butacas){
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YYYY HH:mm");
+		Date date = s.getFecha().getTime();
+		String tiquet="";
+		tiquet+="----------  "+ Thread.currentThread().getName()+"   ---------------\n";
+		tiquet+="---------------------------TIQUET-------------------------------\n";
+		tiquet+="Pelicula: "+s.getPelicula().getNombrePelicula()+"\n";
+		tiquet+="Sala: "+s.getSala().getNumSala()+"\n";
+		tiquet+="Fecha: "+sdf.format(date)+"\n";
+		tiquet+="Precio: "+s.getPrecio().toString()+" x "+butacas.size()+" = "+multiplicadorPrecios(s.getPrecio(), butacas.size())+"\n";
+		tiquet+="--------------BUTACAS------------------\n";
+		for (Butaca b: butacas) {
+			tiquet+="Butaca: Fila-"+b.getNumfila()+"   Numero-"+b.getNumButaca()+"\n";
+		}
+		tiquet+="----------------------------------------------------------";
+		System.out.println(tiquet);
+
 	}
 	
 	/**
@@ -448,9 +468,12 @@ public class ControlCine {
 	}
 	
 	public void comprarEntradas(Sesion s, ArrayList<Butaca> butacas) { //Si los hilos han conseguido reservar, no importa controlar quien compra primero, se supone tienen butacas distintas
+		int cantidad = 0;
 		for(Butaca b : butacas) {
-			s.getMapaSesion()[b.getNumfila()][b.getNumButaca()]
+			cantidad++;
+			s.getMapaSesion()[b.getNumfila()][b.getNumButaca()].setDisponibilidad(Estado.OCUPADO);
 		}
+		generarTiquet(s, butacas);
 	}
 	
 	public boolean reservarEntradas(Sesion s, ArrayList<Butaca> butacas) {
@@ -461,19 +484,18 @@ public class ControlCine {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
 		}
 		this.turno=false; // Bloquea los recursos hasta que se termine de reservar las butacas para un hilo
-		for(Butaca b: butacas) {
+		for(Butaca b: butacas) { //Comprobamos que todas las butacas que pide un hilo estan libres, si no, no podra reservar, y perdera su turno
 			if(!s.getMapaSesion()[b.getNumfila()][b.getNumButaca()].verificaButaca()) {
 				this.turno=true;
 				return false;
 			}
 		}	
-			for(Butaca b: butacas) {
-				s.getMapaSesion()[b.getNumfila()][b.getNumButaca()].reservaButaca(); //Reserva las butacas
-			}
-			this.turno=true; //Permitimos al siguiente hilo que pueda continuar
-			return true;
+		for(Butaca b: butacas) {
+			s.getMapaSesion()[b.getNumfila()][b.getNumButaca()].reservaButaca(); //Reserva las butacas
+		}
+		this.turno=true; //Permitimos al siguiente hilo que pueda continuar
+		return true;
 	}
 }
