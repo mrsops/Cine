@@ -1,13 +1,11 @@
-package modelo;
+package server.modelo;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Scanner;
 
-import modelo.Butaca.Estado;
+import server.modelo.Butaca.Estado;
 
 public class Sesion {
 	private Butaca[][] mapaSesion;

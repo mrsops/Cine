@@ -1,6 +1,4 @@
-package modelo;
-
-import java.util.Scanner;
+package server.modelo;
 
 public class Sala {
 	private int numSala;

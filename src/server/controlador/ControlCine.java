@@ -1,6 +1,5 @@
-package controlador;
+package server.controlador;
 
-import java.beans.FeatureDescriptor;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,11 +8,11 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Scanner;
 
-import modelo.Butaca;
-import modelo.Butaca.Estado;
-import modelo.Pelicula;
-import modelo.Sala;
-import modelo.Sesion;
+import server.modelo.Butaca;
+import server.modelo.Butaca.Estado;
+import server.modelo.Pelicula;
+import server.modelo.Sala;
+import server.modelo.Sesion;
 
 public class ControlCine {
 	private boolean turno;
@@ -467,7 +466,7 @@ public class ControlCine {
 		return null;
 	}
 	
-	public void comprarEntradas(Sesion s, ArrayList<Butaca> butacas) { //Si los hilos han conseguido reservar, no importa controlar quien compra primero, se supone tienen butacas distintas
+	public void comprarEntradas(Sesion s, ArrayList<Butaca> butacas) { //Si los server.hilos han conseguido reservar, no importa controlar quien compra primero, se supone tienen butacas distintas
 		int cantidad = 0;
 		for(Butaca b : butacas) {
 			cantidad++;
@@ -477,7 +476,7 @@ public class ControlCine {
 	}
 	
 	public boolean reservarEntradas(Sesion s, ArrayList<Butaca> butacas) {
-		while(!this.turno) { //controlamos que no puedan reservar varios hilos la misma butaca
+		while(!this.turno) { //controlamos que no puedan reservar varios server.hilos la misma butaca
 			try {
 				Thread.sleep(5);
 			} catch (InterruptedException e) {

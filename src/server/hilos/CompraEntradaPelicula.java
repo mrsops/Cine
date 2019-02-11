@@ -1,11 +1,10 @@
-package hilos;
+package server.hilos;
 
 import java.util.ArrayList;
 
-import controlador.ControlCine;
-import modelo.Butaca;
-import modelo.Pelicula;
-import modelo.Sesion;
+import server.controlador.ControlCine;
+import server.modelo.Butaca;
+import server.modelo.Sesion;
 
 public class CompraEntradaPelicula extends Thread {
 	private ControlCine cine;

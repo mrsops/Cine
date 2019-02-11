@@ -1,6 +1,4 @@
-package modelo;
-
-import modelo.Butaca.Estado;
+package server.modelo;
 
 public class Butaca {
 	private int numfila;

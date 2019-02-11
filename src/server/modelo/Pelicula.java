@@ -1,6 +1,4 @@
-package modelo;
-
-import java.util.ArrayList;
+package server.modelo;
 
 public class Pelicula {
 

@@ -1,19 +1,14 @@
-package vista;
+package server.vista;
 
-import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Scanner;
 
-import controlador.ControlCine;
-import hilos.CompraEntradaPelicula;
-import modelo.Butaca;
-import modelo.Butaca.Estado;
-import modelo.Pelicula;
-import modelo.Sala;
-import modelo.Sesion;
+import server.controlador.ControlCine;
+import server.hilos.CompraEntradaPelicula;
+import server.modelo.Butaca;
+import server.modelo.Pelicula;
+import server.modelo.Sala;
+import server.modelo.Sesion;
 
 public class main {
 	private static ControlCine cine;
@@ -250,12 +245,12 @@ public class main {
 
 				case 11: // Declaramos los datos para cada hilo y al finalizar, los lanzamos todos de golpe
 
-					ArrayList<CompraEntradaPelicula> listaHilos = new ArrayList<>(); //Lista de los hilos que luego intentaran comprar las entradas
+					ArrayList<CompraEntradaPelicula> listaHilos = new ArrayList<>(); //Lista de los server.hilos que luego intentaran comprar las entradas
 					//Recojer los datos para un hilo
 					cine.mostrarSesiones();
 					System.out.println();
-					System.out.println("Introduce el nombre de la sesion que sera comun para todos los hilos: ");
-					String nSesion = entrada.nextLine(); //La misma sesion para todos los hilos
+					System.out.println("Introduce el nombre de la sesion que sera comun para todos los server.hilos: ");
+					String nSesion = entrada.nextLine(); //La misma sesion para todos los server.hilos
 					Sesion nuevaSesion = cine.buscarSesion(nSesion);
 					if (nuevaSesion != null) {
 						decision = "";
@@ -269,7 +264,7 @@ public class main {
 						}
 						while (decision.equals("s") || decision.equals("S") || decision.equals("si") || decision.equals("SI"));
 
-						for (CompraEntradaPelicula compraHilo : listaHilos) { //Arrancamos todos los hilos de golpe
+						for (CompraEntradaPelicula compraHilo : listaHilos) { //Arrancamos todos los server.hilos de golpe
 							compraHilo.start();
 						}
 					}else{
