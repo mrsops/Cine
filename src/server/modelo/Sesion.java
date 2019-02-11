@@ -110,7 +110,7 @@ public class Sesion {
 				 "\n\tPrecio: "+this.precio.toString()+
 				 "\n\tSala: "+this.sala+
 				 "\n\tPelicula: "+this.pelicula+
-				 "\n\t]";		
+				 "\n\t]";
 	}
 	
 	public boolean tieneReservas() {
@@ -129,7 +129,7 @@ public class Sesion {
 		
 	}
 	
-	public void mostrarMapa() {
+	public String mostrarMapa() {
 		
 		if(this.sala!=null) {
 			String mapa="---MAPA DE BUTACAS---\n";
@@ -140,9 +140,10 @@ public class Sesion {
 				}
 				mapa+=linea+"\n";
 			}
-			System.out.println(mapa);
+			return mapa;
 		}else {
 			System.out.println("No se ha assignado ninguna sala");
+			return null;
 		}
 	}
 	

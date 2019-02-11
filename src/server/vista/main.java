@@ -1,10 +1,14 @@
 package server.vista;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import server.controlador.ControlCine;
 import server.hilos.CompraEntradaPelicula;
+import server.hilos.ServerThread;
 import server.modelo.Butaca;
 import server.modelo.Pelicula;
 import server.modelo.Sala;
@@ -202,7 +206,7 @@ public class main {
 					// IMPLEMENTAR CODI ACÍ
 					//...
 					String decision;
-					cine.mostrarSesiones();
+					System.out.println(cine.mostrarSesiones());
 					System.out.print("Introduce el nombre de sesion que quieres asociar: ");
 					nombreSesion = entrada.nextLine();
 					if (cine.buscarSesion(nombreSesion) != null) {
@@ -245,9 +249,10 @@ public class main {
 
 				case 11: // Declaramos los datos para cada hilo y al finalizar, los lanzamos todos de golpe
 
+					/* ANTIGUO METODO
 					ArrayList<CompraEntradaPelicula> listaHilos = new ArrayList<>(); //Lista de los server.hilos que luego intentaran comprar las entradas
 					//Recojer los datos para un hilo
-					cine.mostrarSesiones();
+					System.out.println(cine.mostrarSesiones());
 					System.out.println();
 					System.out.println("Introduce el nombre de la sesion que sera comun para todos los server.hilos: ");
 					String nSesion = entrada.nextLine(); //La misma sesion para todos los server.hilos
@@ -270,6 +275,32 @@ public class main {
 					}else{
 						System.out.println("NO SE HA ENCONTRADO LA SESION");
 					}
+
+					*/
+
+					// NUEVO METODO, ABRIMOS LA ESPERA PARA PETICIONES DESDE CLIENTE
+					try {
+						ServerSocket socketServidor = new ServerSocket(9000);
+						do{
+							Socket socketCliente = socketServidor.accept();
+
+
+							ServerThread servidor = new ServerThread(socketCliente, cine);
+							System.out.println("Conexion aceptada con nuevo cliente");
+							servidor.start();
+						}while (true);
+
+
+					}catch (IOException e){
+						System.out.println(e);
+					}
+
+
+
+
+
+
+
 					break;
 				default:
 					//...
@@ -314,7 +345,7 @@ public class main {
 			System.out.println("9.  Eliminar PELICULA");
 			System.out.println();
 			System.out.println("10. Associar PELICULA a SESSIO");
-			System.out.println("11. Comprar ENTRADAS CON HILOS");
+			System.out.println("11. Poner a espera de compras desde el cliente");
 			System.out.println();
 			System.out.println("0. Salir de la Aplicación CINE");
 
