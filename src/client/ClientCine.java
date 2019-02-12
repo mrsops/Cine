@@ -27,16 +27,13 @@ public class ClientCine {
         PrintStream salida;
         String opcion, respuesta, textoEnvio;
         boolean conectado = false;
-        BufferedReader entradaStrings = new BufferedReader(new InputStreamReader(System.in));
 
         try {
             Socket socket = null;
-            cliente.menu();
+
 
             do {
-                System.out.println("1. Configuracion Cine");
-                System.out.println("2. Comprar entradas");
-                System.out.println("0. Salir");
+                cliente.menu();
                 opcion = tc.nextLine();
             }while(!opcionValidaMenu(opcion));
             switch (opcion){
@@ -63,7 +60,7 @@ public class ClientCine {
                     String elegido = tc.nextLine();
                     if (elegido.equals("s")){
                         salida.println("SYN");
-                        respuesta = entradaStrings.readLine();
+                        respuesta = entrada.readLine();
                         if (respuesta.equals("SYN-ACK")){
                             conectado=true;
                         }else{
@@ -75,7 +72,7 @@ public class ClientCine {
 
                     if (conectado){
                         salida.println("CMP-ENT"); //INDICAMOS AL SERVIDOR QUE NOS DISPONEMOS A COMPRAR ENTRADAS Y LO PROXIMO QUE ENVIAREMOS SERA EL NOMBRE DE LA SESION
-                        System.out.println(entrada.readLine()); //DEBERIA LLEGARNOS TODAS LAS SESIONES DISPONIBLES DE LA SEMANA
+                        System.out.println(leerTrama(entrada));
                         System.out.println("Introduce el nombre de sesion: ");
                         textoEnvio = tc.nextLine();
                         salida.println(textoEnvio);//enviamos al sevidor el nombre de la sesion, y nos quedamos a la espera de que este correcto o no
@@ -86,7 +83,7 @@ public class ClientCine {
                             textoEnvio = tc.nextLine();
                             if (textoEnvio.equals("s")){
                                 salida.println("MST-SLA");
-                                System.out.println(entrada.readLine()); //Mostramos el mapa de butacas
+                                System.out.println(leerTrama(entrada)); //Mostramos el mapa de butacas
                             }
 
                             salida.println("RSV-BUT"); //Indicamos al servidor que queremos reservar entradas
@@ -95,6 +92,29 @@ public class ClientCine {
                                 System.out.print("Cuantas butacas desea reservar?: ");
                                 String nbutacas = tc.nextLine();
                                 salida.println(nbutacas); //Enviamos al servidor el num de butacas que queremos
+                                if(isNum(nbutacas)){
+                                    int nbut = Integer.parseInt(nbutacas);
+                                    int i=0;
+                                    while(i<nbut){
+                                        respuesta = entrada.readLine();
+                                        if (respuesta.equals("NXT-BUT")){
+                                            System.out.print("Introduce la fila de la butaca numero "+(i+1)+": ");
+                                            String fila = tc.nextLine();
+                                            System.out.print("Introduce el numero de la butaca numero "+(i+1)+": ");
+                                            String numBut = tc.nextLine();
+                                            salida.println(fila);
+                                            salida.println(numBut);
+                                            i++;
+                                        }else if(respuesta.equals("ERR-BUT")){
+                                            System.out.println("Ha habido un error al introducir la butaca");
+                                            conectado=false;
+                                            break; //Salimos del bucle
+                                        }
+                                    }
+                                    entrada.readLine();
+                                    System.out.println(leerTrama(entrada)); //Mostramos el mapa de butacas
+
+                                }
                             }
 
 
@@ -106,20 +126,6 @@ public class ClientCine {
 
 
                     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
                     break;
                 case "0":
@@ -142,7 +148,7 @@ public class ClientCine {
     }
 
     private static boolean opcionValidaMenu(String opcion){
-        if(opcion.equals("1") ||opcion.equals("0") ){
+        if(opcion.equals("1") ||opcion.equals("2") || opcion.equals("0") ){
             return true;
         }
         return false;
@@ -222,6 +228,18 @@ public class ClientCine {
             return false;
         }
         return true;
+    }
+
+    private static String leerTrama(BufferedReader in) throws IOException{
+        String trama="";
+        String respuesta;
+        do{
+            respuesta = in.readLine();
+            if (!respuesta.equals("END-TRM")){
+                trama +=respuesta+"\n";
+            }
+        }while (!respuesta.equals("END-TRM"));
+        return trama;
     }
 
 }

@@ -1,9 +1,11 @@
 package server.vista;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Scanner;
 
 import server.controlador.ControlCine;
@@ -122,7 +124,7 @@ public class main {
 					//...
 					// IMPLEMENTAR CODI ACÍ
 					//...
-					cine.mostrarSesiones();
+					System.out.println(cine.mostrarSesiones());
 					System.out.print("Introduce el nombre de sesion a modificar: ");
 					nombreSesion = entrada.nextLine();
 					if (cine.buscarSesion(nombreSesion) != null) { //Si existe la sesion, la modificamos
@@ -248,7 +250,10 @@ public class main {
 
 
 				case 11: // Declaramos los datos para cada hilo y al finalizar, los lanzamos todos de golpe
+					//DATOS DE DEMOS
 
+
+					//FIN DE DATOS DE DEMO
 					/* ANTIGUO METODO
 					ArrayList<CompraEntradaPelicula> listaHilos = new ArrayList<>(); //Lista de los server.hilos que luego intentaran comprar las entradas
 					//Recojer los datos para un hilo
@@ -296,11 +301,22 @@ public class main {
 					}
 
 
+					break;
 
-
-
-
-
+				case 12:
+					Sala salaDemo = new Sala(1, 10, 10, true);
+					cine.nuevaSala(salaDemo);
+					Pelicula peliculaDemo = new Pelicula("Avatar", "Americana", 120, "James Cameron", "Zoe Saldana", "Americanadas en el espacio", "Ciencia Ficcion", "+13");
+					cine.nuevaPelicula(peliculaDemo);
+					Calendar fecha = Calendar.getInstance();
+					int diaMes = fecha.get(Calendar.DAY_OF_MONTH)+1;
+					int mes=fecha.get(Calendar.MONTH);
+					int año = fecha.get(Calendar.YEAR);
+					fecha.set(año, mes, diaMes, 10, 15);
+					BigDecimal precio = new BigDecimal(5);
+					Sesion sesionDemo = new Sesion("sesion1", fecha, salaDemo, precio, peliculaDemo);
+					cine.nuevaSesion(sesionDemo);
+					System.out.println("Terminamos de añadir las demos");
 					break;
 				default:
 					//...
@@ -346,17 +362,18 @@ public class main {
 			System.out.println();
 			System.out.println("10. Associar PELICULA a SESSIO");
 			System.out.println("11. Poner a espera de compras desde el cliente");
+			System.out.println("12 Introducir datos de demo");
 			System.out.println();
 			System.out.println("0. Salir de la Aplicación CINE");
 
 			String stropcio = s.nextLine();
 			opcio=Integer.parseInt(stropcio);
-			if (opcio <0 || opcio >11) {
+			if (opcio <0 || opcio >12) {
 				limpiar();
 				System.out.println("Opcion Incorrecta...");
 				System.out.println();
 			}
-		}while (opcio < 0 || opcio > 11);
+		}while (opcio < 0 || opcio > 12);
 
 		return opcio;
 	}
