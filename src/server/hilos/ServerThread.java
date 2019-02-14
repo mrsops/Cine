@@ -28,9 +28,7 @@ public class ServerThread extends Thread{
     public void run() {
         super.run();
         boolean compraRealizada=false;
-        boolean butSeleccionadas=false;
-        boolean conectado = false;
-        ArrayList<Butaca> butacas=null;
+        ArrayList<Butaca> butacas=new ArrayList<>();
         boolean sesionOk = false;
         PrintWriter salida;
         BufferedReader entrada;
@@ -44,9 +42,9 @@ public class ServerThread extends Thread{
                 //Esperamos a que el cliente envie el primer comando de establecimiento de conexion para sincroniza cliente y servidor
                 linea = entrada.readLine();
                 if(linea.equals("SYN")) {
-                    conectado=true;
+
                     System.out.println("Peticion de conexion");
-                    sleep(2000);
+                    sleep(500);
                     salida.println("SYN-ACK"); // Respondemos al cliente que se ha establecido bien la conexion
 
                 }

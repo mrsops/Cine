@@ -59,7 +59,7 @@ public class ClientCine {
                                     System.out.println("Se usaran los parametros por defecto (ip: localhost, puerto 9000)");
                                     socket = new Socket(defaulthost, defaultPort);
                                 }
-                                socket.setSoTimeout(20000);
+                                socket.setSoTimeout(5000);
                                 entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                                 salida = new PrintStream(socket.getOutputStream());
 

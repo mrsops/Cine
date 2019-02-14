@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 import server.controlador.ControlCine;
 import server.hilos.CompraEntradaPelicula;
+import server.hilos.ServerListener;
 import server.hilos.ServerThread;
 import server.modelo.Butaca;
 import server.modelo.Pelicula;
@@ -27,6 +28,7 @@ public class main {
 		Sala sala;
 		Pelicula pelicula;
 		cine = new ControlCine();
+		ServerListener serverListener=new ServerListener(cine);
 		String nombreSesion, nombrePelicula;
 
 		int opcio;
@@ -249,61 +251,7 @@ public class main {
 
 
 
-				case 11: // Declaramos los datos para cada hilo y al finalizar, los lanzamos todos de golpe
-					//DATOS DE DEMOS
-
-
-					//FIN DE DATOS DE DEMO
-					/* ANTIGUO METODO
-					ArrayList<CompraEntradaPelicula> listaHilos = new ArrayList<>(); //Lista de los server.hilos que luego intentaran comprar las entradas
-					//Recojer los datos para un hilo
-					System.out.println(cine.mostrarSesiones());
-					System.out.println();
-					System.out.println("Introduce el nombre de la sesion que sera comun para todos los server.hilos: ");
-					String nSesion = entrada.nextLine(); //La misma sesion para todos los server.hilos
-					Sesion nuevaSesion = cine.buscarSesion(nSesion);
-					if (nuevaSesion != null) {
-						decision = "";
-						do {
-							System.out.println("Desea crear nuevo hilo?: ");
-							decision = entrada.nextLine();
-							if (decision.equals("s") || decision.equals("S") || decision.equals("si") || decision.equals("SI")) {
-								CompraEntradaPelicula hilo = llenarHiloDatos(cine, nSesion, seleccionarVariasButacas());
-								listaHilos.add(hilo);
-							}
-						}
-						while (decision.equals("s") || decision.equals("S") || decision.equals("si") || decision.equals("SI"));
-
-						for (CompraEntradaPelicula compraHilo : listaHilos) { //Arrancamos todos los server.hilos de golpe
-							compraHilo.start();
-						}
-					}else{
-						System.out.println("NO SE HA ENCONTRADO LA SESION");
-					}
-
-					*/
-
-					// NUEVO METODO, ABRIMOS LA ESPERA PARA PETICIONES DESDE CLIENTE
-					try {
-						ServerSocket socketServidor = new ServerSocket(9000);
-						do{
-							Socket socketCliente = socketServidor.accept();
-
-
-							ServerThread servidor = new ServerThread(socketCliente, cine);
-							System.out.println("Conexion aceptada con nuevo cliente");
-							servidor.start();
-						}while (true);
-
-
-					}catch (IOException e){
-						System.out.println(e);
-					}
-
-
-					break;
-
-				case 12:
+				case 11: //Introducir datos de demo
 					Sala salaDemo = new Sala(1, 10, 10, true);
 					cine.nuevaSala(salaDemo);
 					Pelicula peliculaDemo = new Pelicula("Avatar", "Americana", 120, "James Cameron", "Zoe Saldana", "Americanadas en el espacio", "Ciencia Ficcion", "+13");
@@ -317,6 +265,26 @@ public class main {
 					Sesion sesionDemo = new Sesion("sesion1", fecha, salaDemo, precio, peliculaDemo);
 					cine.nuevaSesion(sesionDemo);
 					System.out.println("Terminamos de añadir las demos");
+
+
+
+
+
+					break;
+
+				case 12: //Poner el servidor a la espera de aceptar clientes
+
+					if (!serverListener.isAlive()){
+						serverListener.start();
+						System.out.println("Se ha movido  el servicio de escucha de peticiones");
+					}else if(!serverListener.isPausaFlag()){
+						serverListener.pause();
+						System.out.println("Se ha detenido el servicio de escucha de peticiones");
+					}else if(serverListener.isPausaFlag()){
+						serverListener.unpause();
+						System.out.println("Se ha continuado con la escucha del servicio");
+					}
+
 					break;
 				default:
 					//...
@@ -361,8 +329,9 @@ public class main {
 			System.out.println("9.  Eliminar PELICULA");
 			System.out.println();
 			System.out.println("10. Associar PELICULA a SESSIO");
-			System.out.println("11. Poner a espera de compras desde el cliente");
-			System.out.println("12 Introducir datos de demo");
+			System.out.println("11. Introducir datos de demo");
+			System.out.println("12. Mover o parar servicio de excucha de conexiones de  cliente");
+
 			System.out.println();
 			System.out.println("0. Salir de la Aplicación CINE");
 
@@ -430,95 +399,17 @@ public class main {
 
 	}
 
+	public static void pararServicioEscucha(ServerListener st){
+		Socket scli=null;
+		try {
+			st.interrupt();
+			scli =  new Socket("localhost", 9000);
+			scli.close();
+		}catch (IOException e){
+			System.out.println("Deteniendo servicio");
+		}
 
-	/* ANTIGUO CASE 11 SIN IMPLEMENTACION DE HILOS
-
-	case 11: //Comprar ENTRADA
-					//...
-					// IMPLEMENTAR CODI ACÍ
-					//...
-					int fila;
-					int numButaca;
-					Calendar horaActual = Calendar.getInstance();
-					SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YYYY HH:mm");
-					Date date = horaActual.getTime();
-					System.out.println("Hora actual: " + sdf.format(date)); //Mostramos la hora actual
-
-					ArrayList<Sesion> sesionesSemana = cine.sesionesSemana();
-					for (Sesion s : cine.getSesiones()) { //Mostramos todas las sesiones de la semana
-						System.out.println(s);
-					}
-
-					if (sesionesSemana.size() > 0) {
-						System.out.print("Selecione la sesion para comprar su entrada: ");
-						nombreSesion = entrada.nextLine();
-						if (cine.buscarSesion(nombreSesion) != null) {
-							sesion = cine.buscarSesion(nombreSesion);
-
-							//MOSTRAMOS EL MAPA DE BUTACAS
-							String selecionarButaca;
-							do {
-								sesion.mostrarMapa();
-								System.out.print("Desea seleccionar una butaca? (s/n): ");
-								selecionarButaca = entrada.nextLine();
-								if (selecionarButaca.equals("s") || selecionarButaca.equals("si") || selecionarButaca.equals("S") || selecionarButaca.equals("SI")) {
-									Butaca butaca = seleccionarButaca();
-									butaca = cine.buscarButacaEnSesion(sesion, butaca);
-
-									//Butaca butaca = sesion.getMapaSesion()[fila][numButaca];
-									if (butaca.verificaButaca()) {
-										System.out.print("Desea reservar esta butaca? (s/n): ");
-										String reservarButaca = entrada.nextLine();
-										if (selecionarButaca.equals("s") || selecionarButaca.equals("si") || selecionarButaca.equals("S") || selecionarButaca.equals("SI")) {
-											butaca.reservaButaca();
-										}
-									} else {
-										if (butaca.getDisponibilidad().equals(Estado.RESERVANDO)) {
-											System.out.print("La butaca esta en proceso de reserva. Desea liberar esta butaca? (s/n): ");
-											String liberarButaca = entrada.nextLine();
-											if (liberarButaca.equals("s") || liberarButaca.equals("si") || liberarButaca.equals("S") || liberarButaca.equals("SI")) {
-												butaca.liberarButaca();
-											}
-
-										} else {
-											System.out.println("La butaca esta ocupada");
-										}
-									}
-								} else { //No se quiso seleccionar una nueva butaca
-									ArrayList<Butaca> butacasSeleccionadas = new ArrayList<>();
-									for (int i = 0; i < sesion.getMapaSesion().length; i++) {
-										for (int j = 0; j < sesion.getMapaSesion()[i].length; j++) {
-											if (sesion.getMapaSesion()[i][j].getDisponibilidad().equals(Estado.RESERVANDO)) {
-												butacasSeleccionadas.add(sesion.getMapaSesion()[i][j]);
-											}
-										}
-									}
-
-									if (butacasSeleccionadas.size() > 0) {
-										sesion.mostrarMapa();
-										System.out.print("Desea comprar estas entradas: ");
-										String comprarEntradas = entrada.nextLine();
-										if (comprarEntradas.equals("s") || comprarEntradas.equals("si") || comprarEntradas.equals("S") || comprarEntradas.equals("SI")) {
-											cine.generarTiquet(sesion);
-										}
-
-									}
-
-								}
+	}
 
 
-							}
-							while (selecionarButaca.equals("s") || selecionarButaca.equals("si") || selecionarButaca.equals("S") || selecionarButaca.equals("SI"));
-						} else {
-							System.out.println("La sesion introducida no se encuentra");
-						}
-					} else {
-						System.out.println("No hay sesiones esta semana");
-					}
-
-					System.out.println("");
-
-					break;
-
-	 */
 }
