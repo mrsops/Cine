@@ -15,10 +15,11 @@ public class ServerThread extends Thread{
     private ControlCine cine;
     private Sesion sesion;
 
-    public ServerThread(Socket s, ControlCine cine) {
+    public ServerThread(Socket s, ControlCine cine, String name) {
         this.socketClient = s;
         this.cine = cine;
         this.sesion = null;
+        this.setName(name);
     }
 
     public ServerThread() {
@@ -51,6 +52,7 @@ public class ServerThread extends Thread{
 
                 if(linea.equals("SEL-SES")){ //Si recibe este comando, envia al cliente las sesiones, y se queda a la espera de recibir el nombre de sesion
                     salida.println(cine.mostrarSesiones()); //Enviamos las sesiones al cliente para que las vea
+                    System.out.println("Enviando sesiones a: "+this.getName());
                     salida.println("END-TRM");
                     sesion = cine.buscarSesion(entrada.readLine());
                     if (sesion!= null){
@@ -63,6 +65,7 @@ public class ServerThread extends Thread{
                 if (linea.equals("MST-SLA")){ //Si recibe este comando es que el cliente esta pidiendo ver el mapa de butacas
                     if (sesionOk){
                         salida.println(sesion.mostrarMapa()); //Enviamos un paquete de muchas lineas
+                        System.out.println("Enviando mapa de butacas de la sesion "+ sesion.getNombreSesion()+" "+sesion.getPelicula().getNombrePelicula()+ " a: "+this.getName());
                         salida.println("END-TRM"); //Indicamos al cliente que aqui termina el envio de lineas
                     }
                 }
@@ -120,6 +123,7 @@ public class ServerThread extends Thread{
                     //Compramos las entradas seleccionadas
                     if(cine.reservarEntradas(sesion,butacas)){
                         salida.println("RSV-OK");
+                        System.out.println("Reservando las entradas para "+this.getName());
                     }else{
                         salida.println("RSV-NOT-OK");
                     }
@@ -130,6 +134,7 @@ public class ServerThread extends Thread{
                     cine.comprarEntradas(sesion,butacas);
                     compraRealizada=true;
                     salida.println("CMP-OK");
+                    System.out.println("El "+ this.getName()+" a comprado las entradas");
                 }
 
 
@@ -139,6 +144,7 @@ public class ServerThread extends Thread{
                     }else{
                         String tiquet = cine.generarTiquet(sesion,butacas);
                         salida.println(tiquet);
+                        System.out.println("Imprimiendo tiquet para "+this.getName());
                         salida.println("END-TRM");
                     }
                 }

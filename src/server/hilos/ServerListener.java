@@ -19,14 +19,16 @@ public class ServerListener extends Thread{
     public void run() {
         super.run();
         ServerSocket socketServidor=null;
+        int contador=0;
         try {
             socketServidor = new ServerSocket(9000);
             do{
+                contador++;
                 Socket socketCliente = socketServidor.accept();
                 if (pausaFlag){
                     pausePoint();
                 }
-                ServerThread servidor = new ServerThread(socketCliente, cine);
+                ServerThread servidor = new ServerThread(socketCliente, cine,"Cliente "+contador);
                 servidor.start();
                 sleep(20);
             }while (true);
