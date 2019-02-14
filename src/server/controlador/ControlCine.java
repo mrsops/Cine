@@ -426,7 +426,7 @@ public class ControlCine {
 	}
 
 
-	public void generarTiquet(Sesion s, ArrayList<Butaca> butacas){
+	public String generarTiquet(Sesion s, ArrayList<Butaca> butacas){
 		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YYYY HH:mm");
 		Date date = s.getFecha().getTime();
 		String tiquet="";
@@ -435,13 +435,13 @@ public class ControlCine {
 		tiquet+="Pelicula: "+s.getPelicula().getNombrePelicula()+"\n";
 		tiquet+="Sala: "+s.getSala().getNumSala()+"\n";
 		tiquet+="Fecha: "+sdf.format(date)+"\n";
-		tiquet+="Precio: "+s.getPrecio().toString()+" x "+butacas.size()+" = "+multiplicadorPrecios(s.getPrecio(), butacas.size())+"\n";
+		tiquet+="Precio: "+s.getPrecio().toString()+"€ x "+butacas.size()+" = "+multiplicadorPrecios(s.getPrecio(), butacas.size())+"€\n";
 		tiquet+="--------------BUTACAS------------------\n";
 		for (Butaca b: butacas) {
 			tiquet+="Butaca: Fila-"+b.getNumfila()+"   Numero-"+b.getNumButaca()+"\n";
 		}
 		tiquet+="----------------------------------------------------------";
-		System.out.println(tiquet);
+		return tiquet;
 
 	}
 
@@ -452,10 +452,7 @@ public class ControlCine {
 	 * @return
 	 */
 	public BigDecimal multiplicadorPrecios(BigDecimal precio, int cantidad) {
-		BigDecimal total= new BigDecimal("0");
-		for (int i = 0; i < cantidad; i++) {
-			total.add(precio);
-		}
+		BigDecimal total = precio.multiply(new BigDecimal(cantidad));
 		return total;
 	}
 
@@ -474,7 +471,7 @@ public class ControlCine {
 			cantidad++;
 			s.getMapaSesion()[b.getNumfila()][b.getNumButaca()].setDisponibilidad(Estado.OCUPADO);
 		}
-		generarTiquet(s, butacas);
+		//generarTiquet(s, butacas);
 	}
 
 	public boolean reservarEntradas(Sesion s, ArrayList<Butaca> butacas) {

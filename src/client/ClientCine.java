@@ -26,7 +26,8 @@ public class ClientCine {
         ClientCine cliente = new ClientCine();
         PrintStream salida=null;
         BufferedReader entrada=null;
-        boolean seleccionadas = false;
+        boolean seleccionadas = false, compradas = false;
+
         String opcion, respuesta, textoEnvio;
         boolean conectado = false;
         try {
@@ -36,7 +37,7 @@ public class ClientCine {
             do {
                 cliente.menu();
                 opcion = tc.nextLine();
-            }while(!opcionValidaMenu(opcion));
+
             switch (opcion){
                 case "1":
                     socket = menuConfig();
@@ -90,7 +91,7 @@ public class ClientCine {
                                             System.out.println(leerTrama(entrada)); //Mostramos el mapa de butacas
                                         }
 
-                                        salida.println("RSV-BUT"); //Indicamos al servidor que queremos reservar entradas
+                                        salida.println("SEL-BUT"); //Indicamos al servidor que queremos reservar entradas
                                         respuesta = entrada.readLine();
                                         if (respuesta.equals("RSV-RDY")) { //El servidor esta listo para procesar las butacas
                                             System.out.print("Cuantas butacas desea reservar?: ");
@@ -98,9 +99,7 @@ public class ClientCine {
                                             salida.println(nbutacas); //Enviamos al servidor el num de butacas que queremos
                                             if (isNum(nbutacas)) {
                                                 int nbut = Integer.parseInt(nbutacas);
-                                                if (nbut>0){
-                                                    seleccionadas=true;
-                                                }
+
                                                 int i = 0;
                                                 while (i < nbut) {
                                                     respuesta = entrada.readLine();
@@ -118,7 +117,6 @@ public class ClientCine {
                                                             System.out.print("La butaca ya la has seleccionado previamente, ¿Desea liberarla? (s/n)");
                                                             textoEnvio = tc.nextLine();
                                                             if (textoEnvio.equals("s")|| textoEnvio.equals("S")){
-                                                                System.out.println("Se pretende que se libere la butaca");
                                                                 salida.println("KAI"); //Le decimos al servidor que libere la butaca que ya hemos seleccionado
                                                                 System.out.println("Butaca liberada correctamente");
                                                                 i--; //Como tenemos una butaca menos, descendemos el contador
@@ -131,39 +129,66 @@ public class ClientCine {
                                                     } else if (respuesta.equals("ERR-BUT")) {
                                                         System.out.println("Ha habido un error al introducir la butaca");
                                                         conectado = false;
-                                                        seleccionadas=false;
                                                         break; //Salimos del bucle
                                                     }
                                                 }
+                                                entrada.readLine(); //Limpiamos el ultimo NXT-BUT que se queda en el buffer
+                                                salida.println("RSV-ENT");
+                                                respuesta = entrada.readLine();
+                                                if(respuesta.equals("RSV-OK")){
+                                                    System.out.println("Reserva de las entradas realizada correctamente");
+                                                    salida.println("MST-SLA"); // Pedimos al servidor que nos mande el mapa de butacas
+                                                    System.out.println(leerTrama(entrada)); //Mostramos el mapa de butacas
+                                                    seleccionadas=true;
+                                                }else if(respuesta.equals("RSV-NOT-OK")){
+                                                    System.out.println("No ha sido posible reservar las butacas debido a que han sido reservadas para otra persona u ocupadas");
+                                                }else {
+                                                    System.out.println("Ha habido problemas al procesar la peticion de reserva de las entradas");
 
-                                                entrada.readLine();//Limpiamos el ultimo NXT-BUT
-                                                salida.println("MST-SLA");
-                                                System.out.println(leerTrama(entrada)); //Mostramos el mapa de butacas
+                                                }
 
+
+
+                                            }else{
+                                                System.out.println("Error al introducir un numero");
                                             }
                                         }
-
-
                                     } else if (respuesta.equals("sesion-not-ok")) {
                                         System.out.println("Sesion incorrecta");
                                     } else {
                                         System.out.println("Ha habido problemas al procesar esta peticion");
                                     }
-
-
                                 }
                                 break;
 
                             case "2":
                                 if (seleccionadas){
+                                    System.out.println("En un momento se procesara su solicitud de compra(s/n)");
+                                        salida.println("CMP-ENT");
+                                        respuesta = entrada.readLine();
+                                        if (respuesta.equals("CMP-OK")){
+                                            System.out.println("Compra realizada correctamente");
+                                            compradas=true;
+                                        }else{
+                                            System.out.println("No se ha podido realizar la compra");
+                                        }
 
 
                                 }else {
-                                    System.out.println("No se ha seleccionado ninguna entrada");
+                                    System.out.println("No se ha seleccionado o reservado ninguna entrada");
                                 }
                                 break; //Fin de case 2 Comprar las entradas
 
+                            case "3": //Imprimir tiquet
+                                if (compradas){
+                                salida.println("IMP-TIQUET");
+                                System.out.println(leerTrama(entrada));
+                                }else {
+                                    System.out.println("Aun no se ha comprado ninguna entrada");
+                                }
+                                break;
                             case "0":
+                                salida.println("RST");
                                 System.out.println("Cerrando conexion");
                                 salida.close();
                                 entrada.close();
@@ -175,13 +200,14 @@ public class ClientCine {
                     }while (!opcion.equals("0")); //
                     break;
                 case "0":
-
+                    System.out.println("Saliendo...");
                     break;
 
                 default:
                     break;
 
             }
+            }while(!opcion.equals("0"));
         }catch (Exception e){
             System.out.println(e);
         }
@@ -193,12 +219,6 @@ public class ClientCine {
         System.out.println("0. Salir");
     }
 
-    private static boolean opcionValidaMenu(String opcion){
-        if(opcion.equals("1") ||opcion.equals("2") || opcion.equals("0") ){
-            return true;
-        }
-        return false;
-    }
 
     private static Socket menuConfig() throws IOException{
         String direccionIP;
@@ -207,8 +227,6 @@ public class ClientCine {
         System.out.print("Introduce la direccion ip del servidor de cine:");
         direccionIP = tc.nextLine();
         if (esIp(direccionIP)){
-
-
             System.out.print("Introduce el puerto: ");
             int puerto = tc.nextInt();
             ip = convierteAIp(direccionIP);
@@ -229,38 +247,24 @@ public class ClientCine {
 
 
     private static boolean esIp(String ip){
-        String[] ipFrac = ip.split(".");
-        if (ipFrac.length !=4){
+        InetAddress direccion;
+        try {
+            direccion = convierteAIp(ip);
+            return true;
+        }catch (UnknownHostException e){
             return false;
         }
-        for (int i = 0; i<ipFrac.length;i++){
-            if (!isNum(ipFrac[i])){
-                return false;
-            }
-        }
-
-        for (int i = 0; i <ipFrac.length ; i++) {
-            int n=Integer.parseInt(ipFrac[i]);
-            if (!rangoOk(n)){
-                return false;
-            }
-        }
-        return true;
     }
 
-    private static InetAddress convierteAIp(String ipSting) throws UnknownHostException{
+    private static InetAddress convierteAIp(String ipString) throws UnknownHostException{
         try {
-            return InetAddress.getByName(ipSting);
+            return InetAddress.getByName(ipString);
         }catch (UnknownHostException e){
             throw e;
         }
-
-
-
     }
 
     private static boolean isNum(String num){
-        Integer.parseInt(num);
         try {
             Integer.parseInt(num);
             return true;

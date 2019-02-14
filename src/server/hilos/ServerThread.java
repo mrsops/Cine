@@ -30,7 +30,7 @@ public class ServerThread extends Thread{
         boolean compraRealizada=false;
         boolean butSeleccionadas=false;
         boolean conectado = false;
-        ArrayList<Butaca> butacas;
+        ArrayList<Butaca> butacas=null;
         boolean sesionOk = false;
         PrintWriter salida;
         BufferedReader entrada;
@@ -69,7 +69,7 @@ public class ServerThread extends Thread{
                     }
                 }
 
-                if (linea.equals("RSV-BUT")){
+                if (linea.equals("SEL-BUT")){
                     if (sesionOk){ //Si la sesion es correcta, procedemos a la reserva de butacas
                         salida.println("RSV-RDY"); //enviamos al cliente que el servidor esta listo para procesar las butacas
                         String nbut = entrada.readLine(); // aqui almacenaremos la cantidad de butacas que se van a reservar
@@ -114,29 +114,34 @@ public class ServerThread extends Thread{
                                 break;
                             }
                         }
-                        if (butacas!=null){
-                            cine.reservarEntradas(sesion, butacas);
-                        }
-
                     }else{
                         salida.println("sesion-error");
                     }
                 }
-
-                if (linea.equals("CMP-ENT")){
+                if (linea.equals("RSV-ENT")){ //Reservar las butacas seleccionadas
                     //Compramos las entradas seleccionadas
-                    if(!butSeleccionadas){
-                        salida.println("CMP-ERR");
+                    if(cine.reservarEntradas(sesion,butacas)){
+                        salida.println("RSV-OK");
                     }else{
-
+                        salida.println("RSV-NOT-OK");
                     }
                 }
+
+                if (linea.equals("CMP-ENT")){ //Compramos las entradas reservadas
+                    sleep(1000);
+                    cine.comprarEntradas(sesion,butacas);
+                    compraRealizada=true;
+                    salida.println("CMP-OK");
+                }
+
 
                 if (linea.equals("IMP-TIQUET")){
                     if(!compraRealizada){
                         salida.println("IMP-ERR");
                     }else{
-
+                        String tiquet = cine.generarTiquet(sesion,butacas);
+                        salida.println(tiquet);
+                        salida.println("END-TRM");
                     }
                 }
                 if (linea.equals("RST")){ // cerramos la conexion
@@ -155,12 +160,8 @@ public class ServerThread extends Thread{
             }while(true);
 
         }catch (SocketException | NullPointerException e){
-            try{
-                this.socketClient.close();
+                liberarTodas(butacas, sesion);
                 System.out.println("Conexion perdida");
-            }catch (IOException e1){
-                e1.printStackTrace();
-            }
         }catch (IOException e){
             e.printStackTrace();
         }catch (InterruptedException e){
@@ -197,5 +198,12 @@ public class ServerThread extends Thread{
             }
         }
         return false;
+    }
+
+    private void liberarTodas(ArrayList<Butaca> butacas, Sesion sesion){
+        for (Butaca b:butacas
+             ) {
+            sesion.getMapaSesion()[b.getNumfila()][b.getNumButaca()].liberarButaca();
+        }
     }
 }
