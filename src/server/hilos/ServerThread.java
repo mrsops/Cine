@@ -4,6 +4,7 @@ import server.controlador.ControlCine;
 import server.modelo.Butaca;
 import server.modelo.Sesion;
 
+import javax.xml.soap.SAAJMetaFactory;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
@@ -26,12 +27,15 @@ public class ServerThread extends Thread{
     @Override
     public void run() {
         super.run();
+        boolean compraRealizada=false;
+        boolean butSeleccionadas=false;
         boolean conectado = false;
         ArrayList<Butaca> butacas;
         boolean sesionOk = false;
         PrintWriter salida;
         BufferedReader entrada;
         try {
+
             salida = new PrintWriter(new BufferedWriter(new OutputStreamWriter(this.socketClient.getOutputStream())), true);
             entrada = new BufferedReader(new InputStreamReader(this.socketClient.getInputStream()));
             String linea;
@@ -47,7 +51,7 @@ public class ServerThread extends Thread{
 
                 }
 
-                if(linea.equals("CMP-ENT")){ //Si recibe este comando, envia al cliente las sesiones, y se queda a la espera de recibir el nombre de sesion
+                if(linea.equals("SEL-SES")){ //Si recibe este comando, envia al cliente las sesiones, y se queda a la espera de recibir el nombre de sesion
                     salida.println(cine.mostrarSesiones()); //Enviamos las sesiones al cliente para que las vea
                     salida.println("END-TRM");
                     sesion = cine.buscarSesion(entrada.readLine());
@@ -82,7 +86,27 @@ public class ServerThread extends Thread{
                             if (isNum(sFila) && isNum(sPosButaca)){
                                 fila = Integer.parseInt(sFila);
                                 posButaca = Integer.parseInt(sPosButaca);
-                                butacas.add(new Butaca(fila, posButaca));
+                                Butaca butaca =new Butaca(fila,posButaca);
+                                if (sesion.getMapaSesion()[fila][posButaca].verificaButaca() && !butByThisUser(butaca, butacas)){
+                                    butacas.add(butaca);
+                                    salida.println("BUT-OK");
+                                }else{ //Si no esta disponible
+                                    i--; //Con esta linea, al no estar disponible la reserva, nos quedamos igual que estabamos en el contador
+                                    if (butByThisUser(butaca, butacas)){ //Si esta reservada ya, pero por este usuario
+                                            salida.println("RSRVED-BYU");
+                                            String liberar = entrada.readLine();
+                                            if (liberar.equals("KAI")){
+                                                sesion.getMapaSesion()[fila][posButaca].liberarButaca();
+                                                liberarButaca(butaca,butacas);
+                                                i--; //Al liberar, perdemos una butaca asi que descendemos el contador
+                                            }
+
+
+                                    }else{ //Si esta reservada por otro usuario
+                                        salida.println("BUT-NOT-FREE");
+                                    }
+                                }
+
                                 salida.println("NXT-BUT"); //Indicamos al cliente que puede proceder a enviar la siguiente butaca
                             }else{
                                 salida.println("ERR-BUT"); //Indicamos al cliente que ha habido un error con los parametros enviados para la toma de la butaca
@@ -93,11 +117,26 @@ public class ServerThread extends Thread{
                         if (butacas!=null){
                             cine.reservarEntradas(sesion, butacas);
                         }
-                        salida.println(sesion.mostrarMapa());
-                        salida.println("END-TRM");
 
                     }else{
                         salida.println("sesion-error");
+                    }
+                }
+
+                if (linea.equals("CMP-ENT")){
+                    //Compramos las entradas seleccionadas
+                    if(!butSeleccionadas){
+                        salida.println("CMP-ERR");
+                    }else{
+
+                    }
+                }
+
+                if (linea.equals("IMP-TIQUET")){
+                    if(!compraRealizada){
+                        salida.println("IMP-ERR");
+                    }else{
+
                     }
                 }
                 if (linea.equals("RST")){ // cerramos la conexion
@@ -115,8 +154,7 @@ public class ServerThread extends Thread{
 
             }while(true);
 
-
-        }catch (SocketException e){
+        }catch (SocketException | NullPointerException e){
             try{
                 this.socketClient.close();
                 System.out.println("Conexion perdida");
@@ -137,5 +175,27 @@ public class ServerThread extends Thread{
         }catch (NumberFormatException e){
             return false;
         }
+    }
+
+    private boolean butByThisUser(Butaca butaca, ArrayList<Butaca> butacas){
+        for (Butaca b:butacas
+             ) {
+            if (b.getNumfila()==butaca.getNumfila() && butaca.getNumButaca() == b.getNumButaca()){
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    private boolean liberarButaca(Butaca b, ArrayList<Butaca> butacas){
+        for (Butaca b1:butacas
+             ) {
+            if (b.getNumButaca()==b1.getNumButaca() && b.getNumfila() == b1.getNumfila()){
+                butacas.remove(b);
+                return true;
+            }
+        }
+        return false;
     }
 }
